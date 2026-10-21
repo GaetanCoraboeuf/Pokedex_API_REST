@@ -29,7 +29,12 @@ def get_pokemon(number: int):
     response = requests.get(url)
     if response.status_code == 200:
         donnees = response.json()
-
-        return donnees
+        donnees_pokemon = {
+            "number": donnees["id"],
+            "name": donnees["name"],
+            "height": donnees["height"],
+            "weight": donnees["weight"],
+            }
+        return donnees_pokemon
     else:
         return {"error": "Pokémon non trouvé"}
