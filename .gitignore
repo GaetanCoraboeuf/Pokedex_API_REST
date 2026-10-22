@@ -1,2 +1,3 @@
 .venv
-./pokedex/_pycache_
+pokedex/_pycache_
+**/_pycache_
