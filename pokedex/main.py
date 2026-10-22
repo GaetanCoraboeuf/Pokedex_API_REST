@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from schemas.pokemon import Pokemon
 from db.database import get_connection
 from repositories.pokemon_repository import get_pokemon_by_number
+from clients.pokeapi import get_pokemon_from_api
 # depends:db  
 
 # fast API start
@@ -47,3 +48,15 @@ def get_pokemon(number: int):
         return donnees_pokemon
     else:
         return {"error": "Pokémon non trouvé"}
+
+# Route GET pour récupérer les informations d'un Pokémon par son numéro
+@app.get("/pokemons/{number}/scan")
+def get_pokemon_import(number: int):
+    donnees_pokemon = get_pokemon_from_api(number)
+    if donnees_pokemon != 0:
+        db = get_connection()
+        get_pokemon_by_number(db, number)
+        return {"message": "Pokémon importé avec succès", "pokemon": donnees_pokemon}
+    else:
+        return {"error": "Pokémon non trouvé"}
+    
