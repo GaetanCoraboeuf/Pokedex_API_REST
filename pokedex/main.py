@@ -9,7 +9,7 @@ import json
 from fastapi import FastAPI
 from schemas.pokemon import Pokemon
 from db.database import get_connection
-from repositories.pokemon_repository import get_pokemon_by_number
+from repositories.pokemon_repository import get_pokemon_by_number, save_pokemon
 from clients.pokeapi import get_pokemon_from_api
 # depends:db  
 
@@ -55,7 +55,8 @@ def get_pokemon_import(number: int):
     donnees_pokemon = get_pokemon_from_api(number)
     if donnees_pokemon != 0:
         db = get_connection()
-        get_pokemon_by_number(db, number)
+        save_pokemon(db, donnees_pokemon)
+        db.close()
         return {"message": "Pokémon importé avec succès", "pokemon": donnees_pokemon}
     else:
         return {"error": "Pokémon non trouvé"}
