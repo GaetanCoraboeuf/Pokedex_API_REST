@@ -9,9 +9,16 @@ def get_pokemon_from_api(number: int):
         response = requests.get(url)
         if response.status_code == 200:
             donnees_nom_fr = response.json()
-            donnees_evolves_from_species = response.json()
+            donnees_evolves_from_species_tmp = response.json()["evolves_from_species"]
+            if donnees_evolves_from_species_tmp != None:
+                donnees_evolves_from_species = donnees_evolves_from_species_tmp["url"].split("/")[-2]
+                if int(donnees_evolves_from_species) > 151:
+                    donnees_evolves_from_species = "null" # Valeur par défaut si le Pokémon n'apartient pas à la première génération
+            else:
+                donnees_evolves_from_species = "null"
         else:
             donnees_nom_fr = {"name":"","language":{"name":"fr","url":""}}  # Valeur par défaut si la requête échoue
+            donnees_evolves_from_species = "null"
             
         for name_entry in donnees_nom_fr.get("names", []):
             if name_entry["language"]["name"] == "fr":
@@ -42,7 +49,7 @@ def get_pokemon_from_api(number: int):
             "image_url": donnees["sprites"]["front_default"],
             "height": donnees["height"],
             "weight": donnees["weight"],
-            "evolves_from_number": 0,
+            "evolves_from_number": donnees_evolves_from_species,
         }
         return donnees_pokemon
     else:
