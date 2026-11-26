@@ -1,56 +1,47 @@
 import requests
 
+BASE_URL = "https://pokeapi.co/api/v2"
+
+# Renvoie le nom français d'une entrée "names" de PokéAPI, ou le nom de secours s'il n'y en a pas
+def _nom_fr(names: list, secours: str) -> str:
+    for entry in names:
+        if entry["language"]["name"] == "fr":
+            return entry["name"]
+    return secours
+
+def _type_fr(type_name: str) -> str:
+    response = requests.get(f"{BASE_URL}/type/{type_name}")
+    if response.status_code != 200:
+        return type_name
+    return _nom_fr(response.json().get("names", []), type_name)
+
+# Renvoie la fiche normalisée du Pokémon, ou 0 s'il est introuvable
 def get_pokemon_from_api(number: int):
-    url = f"https://pokeapi.co/api/v2/pokemon/{number}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        donnees = response.json()
-        url = f"https://pokeapi.co/api/v2/pokemon-species/{number}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            donnees_nom_fr = response.json()
-            donnees_evolves_from_species_tmp = response.json()["evolves_from_species"]
-            if donnees_evolves_from_species_tmp != None:
-                donnees_evolves_from_species = donnees_evolves_from_species_tmp["url"].split("/")[-2]
-                if int(donnees_evolves_from_species) > 151:
-                    donnees_evolves_from_species = "null" # Valeur par défaut si le Pokémon n'apartient pas à la première génération
-            else:
-                donnees_evolves_from_species = "null"
-        else:
-            donnees_nom_fr = {"name":"","language":{"name":"fr","url":""}}  # Valeur par défaut si la requête échoue
-            donnees_evolves_from_species = "null"
-            
-        for name_entry in donnees_nom_fr.get("names", []):
-            if name_entry["language"]["name"] == "fr":
-                name_fr = name_entry["name"]
-                break
-        else:
-            name_fr = ""  # Valeur par défaut si le nom français n'est pas trouvé
-        
-        type_fr_list = []
-        for type_entry in donnees["types"]:
-            type = type_entry["type"]["name"]
-            url = f"https://pokeapi.co/api/v2/type/{type}"
-            response = requests.get(url)
-            if response.status_code == 200:
-                donnees_nom_type_fr_tmp = response.json()
-                for name_type_entry in donnees_nom_type_fr_tmp.get("names", []):
-                    if name_type_entry["language"]["name"] == "fr":
-                        type_fr_list.append(name_type_entry["name"])
-                        break
-                else:
-                    type_fr_list.append("")  # Valeur par défaut si le nom français n'est pas trouvé
-        
-        donnees_pokemon = {
-            "number": donnees["id"],
-            "name": donnees["name"],
-            "name_fr": name_fr,
-            "type": type_fr_list,
-            "image_url": donnees["sprites"]["front_default"],
-            "height": donnees["height"],
-            "weight": donnees["weight"],
-            "evolves_from_number": donnees_evolves_from_species,
-        }
-        return donnees_pokemon
-    else:
+    response = requests.get(f"{BASE_URL}/pokemon/{number}")
+    if response.status_code != 200:
         return 0
+    donnees = response.json()
+
+    name_fr = donnees["name"]
+    evolves_from_number = 0
+    response = requests.get(f"{BASE_URL}/pokemon-species/{number}")
+    if response.status_code == 200:
+        espece = response.json()
+        name_fr = _nom_fr(espece.get("names", []), donnees["name"])
+        parent = espece.get("evolves_from_species")
+        if parent is not None:
+            numero_parent = int(parent["url"].rstrip("/").split("/")[-1])
+            # le projet ne garde que les évolutions internes à la génération 1
+            if numero_parent <= 151:
+                evolves_from_number = numero_parent
+
+    return {
+        "number": donnees["id"],
+        "name": donnees["name"],
+        "name_fr": name_fr,
+        "type": [_type_fr(t["type"]["name"]) for t in donnees["types"]],
+        "image_url": donnees["sprites"]["front_default"],
+        "height": donnees["height"] * 10,  # décimètres -> centimètres
+        "weight": donnees["weight"] * 100,  # hectogrammes -> grammes
+        "evolves_from_number": evolves_from_number,
+    }
