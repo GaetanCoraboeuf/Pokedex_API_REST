@@ -13,11 +13,7 @@ def get_pokemon_by_number(db, number: int):
 # Insère le Pokémon, ou le remplace s'il a déjà été scanné
 def save_pokemon(db, pokemon: dict):
     db.execute(
-        """
-        INSERT OR REPLACE INTO pokemon
-        (number, name, name_fr, types, image_url, height, weight, evolves_from_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
+        "INSERT OR REPLACE INTO pokemon (number, name, name_fr, types, image_url, height, weight, evolves_from_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             pokemon["number"],
             pokemon["name"],
@@ -28,5 +24,6 @@ def save_pokemon(db, pokemon: dict):
             pokemon["weight"],
             pokemon["evolves_from_number"],
         ),
+        
     )
     db.commit()

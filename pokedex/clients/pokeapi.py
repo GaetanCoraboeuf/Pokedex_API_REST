@@ -41,7 +41,7 @@ def get_pokemon_from_api(number: int):
         "name_fr": name_fr,
         "type": [_type_fr(t["type"]["name"]) for t in donnees["types"]],
         "image_url": donnees["sprites"]["front_default"],
-        "height": donnees["height"] * 10,  # décimètres -> centimètres
-        "weight": donnees["weight"] * 100,  # hectogrammes -> grammes
+        "height": donnees["height"],
+        "weight": donnees["weight"],
         "evolves_from_number": evolves_from_number,
     }

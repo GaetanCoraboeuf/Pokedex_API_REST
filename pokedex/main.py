@@ -11,6 +11,7 @@ from schemas.pokemon import Pokemon
 from db.database import get_connection
 from repositories.pokemon_repository import get_pokemon_by_number, save_pokemon
 from clients.pokeapi import get_pokemon_from_api
+from services.pokemon_services import services_metier
 # depends:db  
 
 # fast API start
@@ -52,12 +53,14 @@ def get_pokemon(number: int):
 # Route GET pour récupérer les informations d'un Pokémon par son numéro
 @app.get("/pokemons/{number}/scan")
 def get_pokemon_import(number: int):
-    donnees_pokemon = get_pokemon_from_api(number)
-    if donnees_pokemon != 0:
-        db = get_connection()
-        save_pokemon(db, donnees_pokemon)
-        db.close()
-        return {"message": "Pokémon importé avec succès", "pokemon": donnees_pokemon}
+    db = get_connection()
+    # donnees_pokemon = get_pokemon_from_api(number)
+    # if donnees_pokemon != 0:
+    #     db = get_connection()
+    #     save_pokemon(db, donnees_pokemon)
+    #     db.close()
+    if services_metier(db,number):
+        return {"message": "Pokémon importé avec succès"}
     else:
         return {"error": "Pokémon non trouvé"}
     
